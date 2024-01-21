@@ -4,7 +4,7 @@ const { readFileSync } = require("fs")
 const path = require("path")
 
 
-router.get("/add", async (req, res) => {
+router.get("/", async (req, res) => {
     try {
         let html = readFileSync(path.join(__dirname, '../static', 'output.html'), "utf-8")
         return res.send(html)
