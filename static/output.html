@@ -1,0 +1,254 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>URL Shortener</title>
+    <style>
+        body {
+            font-family: 'Arial', sans-serif;
+            background-color: #f4f4f4;
+            margin: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+        }
+
+        #url-shortener {
+            text-align: center;
+            background-color: #fff;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+            max-width: 400px;
+            width: 100%;
+        }
+
+        #url-input {
+            width: 100%;
+            padding: 10px;
+            margin-bottom: 10px;
+            box-sizing: border-box;
+            font-size: 16px;
+        }
+
+        #custom-path-input {
+            display: none;
+            width: 100%;
+            padding: 10px;
+            margin-bottom: 10px;
+            box-sizing: border-box;
+            font-size: 16px;
+        }
+
+        #random-checkbox {
+            margin-right: 5px;
+        }
+
+        #shorten-btn {
+            background-color: #4CAF50;
+            color: #fff;
+            border: none;
+            padding: 10px 20px;
+            text-align: center;
+            text-decoration: none;
+            display: inline-block;
+            font-size: 16px;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+
+        #shorten-btn:hover {
+            background-color: #45a049;
+        }
+
+        /* Glassmorphism-style popup */
+        #result-popup {
+            /* display: none; */
+            position: fixed;
+            width: 70vw;
+            min-height: 70vh;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: rgba(255, 255, 255, 0.8);
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            text-align: center;
+        }
+
+        .invoice-item {
+            margin: auto;
+            font-size: 2rem;
+            min-width: 70%;
+            max-width: 80%;
+            display: flex;
+            justify-content: space-between;
+        }
+
+        .invoice-item>span {
+            /* word-wrap: break-word;    */
+            word-break: break-all;
+            margin-left: 1rem;
+        }
+
+        .urlLink {
+            font-size: 1.8rem;
+            font-weight: 400;
+
+        }
+
+        .urlName {
+            min-width: fit-content;
+        }
+
+
+        #close-btn {
+            background-color: #4CAF50;
+            color: #fff;
+            border: none;
+            padding: 10px 20px;
+            text-align: center;
+            text-decoration: none;
+            display: inline-block;
+            font-size: 16px;
+            border-radius: 4px;
+            cursor: pointer;
+            margin-top: 20px;
+        }
+
+        .invoicecontainer {
+            /* justify-content: center; */
+            margin-top: 20%;
+            margin-bottom: 5%;
+        }
+
+        #close-btn:hover {
+            background-color: #45a049;
+        }
+    </style>
+</head>
+
+<body>
+
+    <div id="url-shortener">
+        <h2>URL Shortener</h2>
+        <input type="text" id="url-input" placeholder="Enter URL">
+        <div style="text-align: left; width: 100%; float: left; left: 0; margin-bottom: .5rem;">
+            <label for="random-checkbox">Generate Random:</label>
+            <input type="checkbox" id="random-checkbox" checked onchange="toggleCustomPath()">
+        </div>
+        <input type="text" id="custom-path-input" placeholder="Custom Path" style="display: none;">
+        <button style="width: 100%; margin-top: .5rem;" id="shorten-btn" onclick="shortenUrl()">Shorten URL</button>
+
+        <!-- Glassmorphism-style popup for result -->
+        <div id="result-popup" hidden>
+            <div class="invoicecontainer">
+
+                <div class="invoice-item">
+                    <span class="urlName">Original URL:</span>
+                    <span class="urlLink" id="original-url"></span>
+                </div>
+                <div class="invoice-item">
+                    <span class="urlName">Shortened URL:</span>
+                    <span class="urlLink" id="shortened-url"></span>
+                </div>
+            </div>
+            <!-- Add additional information as needed -->
+
+            <button id="close-btn" onclick="toggleResultPopup()">Close</button>
+        </div>
+
+        <script>
+            function toggleCustomPath() {
+                const customPathInput = document.getElementById('custom-path-input');
+                const randomCheckbox = document.getElementById('random-checkbox');
+
+                if (randomCheckbox.checked) {
+                    customPathInput.style.display = 'none';
+                } else {
+                    customPathInput.style.display = 'block';
+                }
+            }
+
+            function cliptoboard(text) {
+                navigator.clipboard.writeText(text).then(function () {
+                    alert("Copied to Clipboard!")
+                    // console.log('Async: Copying to clipboard was successful!');
+                }, function (err) {
+                    alert("Unable to copy the text to clipboard!")
+                    // console.error('Async: Could not copy text: ', err);
+                });
+            }
+            function isValidHttpUrl(string) {
+                let url;
+
+                try {
+                    url = new URL(string);
+                } catch (_) {
+                    return false;
+                }
+
+                return url.protocol === "http:" || url.protocol === "https:";
+            }
+
+            async function shortenUrl() {
+                const urlInput = document.getElementById('url-input').value;
+                const randomCheckbox = document.getElementById('random-checkbox');
+                const customPathInput = document.getElementById('custom-path-input');
+                if(!isValidHttpUrl(urlInput)){
+                    alert('Please enter a valid url');
+                    return;
+                }
+                let path = '';
+
+                if (!randomCheckbox.checked) {
+                    path = customPathInput.value.trim();
+
+                    if (path === '') {
+                        alert('Please enter a custom path for the URL.');
+                        return;
+                    }
+
+                    // Validate the custom path (alphanumeric, 8 characters long, etc.)
+                    // Add your validation logic here
+                }
+
+                // Simulating a successful response for testing purposes
+                const fetchdata = await fetch('/add', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        url: urlInput,
+                        path: path,
+                    }),
+                })
+                const fetcheddata = await fetchdata.json()
+                if(fetchdata.status!=200){
+                    alert(fetcheddata.error)
+                    return
+                }
+
+                // Update result popup content
+                document.getElementById('original-url').innerHTML = `<a href="${urlInput}">${urlInput.length > 30 ? urlInput.slice(0, 30) + "..." : urlInput || 'N/A'}</a>`;
+                document.getElementById('shortened-url').innerHTML = `<a onclick="cliptoboard('${window.location.origin+"/r/"+fetcheddata.data.path}')">${window.location.origin+"/r/"+fetcheddata.data.path || 'N/A'}</a>`;
+
+                // Show the result popup
+                toggleResultPopup();
+            }
+
+            function toggleResultPopup() {
+                const resultPopup = document.getElementById('result-popup');
+                resultPopup.hidden = resultPopup.hidden === true ? false : true;
+            }
+        </script>
+    </div>
+
+</body>
+
+</html>
